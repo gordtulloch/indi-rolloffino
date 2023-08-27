@@ -149,7 +149,7 @@ RollOffIno::RollOffIno()
 ***************************************************************************************/
 const char *RollOffIno::getDefaultName()
 {
-    return (const char *)"RollOff ino";
+    return (const char *)"RollOff ino GT";
 }
 /**************************************************************************************
 ** INDI request to init properties. Connected Define properties to Ekos
