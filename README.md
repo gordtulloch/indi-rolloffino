@@ -3,6 +3,9 @@ INDI observatory rolloff roof driver to work with a Arduino controller
 
 Forked from https://github.com/wotalota/indi-rolloffino with many thanks! Wotalota's code is a good general purpose starting point whereas mine is for a specific configuration:
 
+- 8 port relay module
+- Detection of RA and DEC park status of the telescope to ensure they are ON before a Close is allowed
+
 
 ## Changes from the original code:
 
