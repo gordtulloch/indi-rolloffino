@@ -30,4 +30,4 @@ I use my Aux ports for:
 - Aux5	N camera
 - Aux6	Future
 
-### Status: still working on initial mods to the C++, INO is done
+### Status: still working on initial mods to the C++ so not currently checked in, INO is nearly done
