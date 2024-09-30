@@ -1,5 +1,7 @@
 INDI rolloff roof driver to communicate with an Arduino controller.
 -------------------------------------------------------------------
+Forked from https://github.com/wotalota/indi-rolloffino with many thanks! 
+Wotalota's code is a good general purpose starting point whereas mine is for a specific configuration:
 
 Intended as a basis for a DIY home build project that uses a Arduino controller for roof movement.
 Provided in a form similar to a INDI third party driver along with some Arduino code examples. The driver is
@@ -28,9 +30,9 @@ The driver output functions will typically close relays to active the roof open 
 The driver input request is to read the state of switches from the Arduino to detect when the roof is fully open
 or fully closed.
 
-Driver: RollOff ino
-Executable: indi_rolloffino
-INDI:       1.8.1
+Driver: RollOffNano
+Executable: indi_rolloffnano
+INDI:       1.0.0
 
 
 Outline of the text between roof driver and Arduino
