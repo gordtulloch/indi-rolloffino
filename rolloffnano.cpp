@@ -24,7 +24,7 @@
  * by default to 38400 baud. The Arduino code determines which pins open/close a relay to start/stop the
  * roof motor, and read state of switches indicating if the roof is  opened or closed.
  */
-#include "rollOffNano.h"
+#include "rolloffnano.h"
 #include "indicom.h"
 #include "termios.h"
 
@@ -58,7 +58,7 @@
 #define VERSION_ID "20240930nano"
 
 // We declare an auto pointer to rollOffNano.
-std::unique_ptr<rollOffNano> rollOffNano(new rollOffNano());
+std::unique_ptr<RollOffNano> rollOffNano(new RollOffNano());
 
 void ISPoll(void *p);
 
@@ -67,7 +67,7 @@ void ISGetProperties(const char *dev)
     rollOffNano->ISGetProperties(dev);
 }
 
-void rollOffNano::ISGetProperties(const char *dev)
+void RollOffNano::ISGetProperties(const char *dev)
 {
     INDI::Dome::ISGetProperties(dev);
 
@@ -91,7 +91,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
     rollOffNano->ISNewNumber(dev, name, values, names, n);
 }
 
-bool rollOffNano::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
+bool RollOffNano::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
 {
     if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
     {
@@ -125,12 +125,12 @@ void ISSnoopDevice(XMLEle *root)
     rollOffNano->ISSnoopDevice(root);
 }
 
-bool rollOffNano::ISSnoopDevice(XMLEle *root)
+bool RollOffNano::ISSnoopDevice(XMLEle *root)
 {
     return INDI::Dome::ISSnoopDevice(root);
 }
 
-rollOffNano::rollOffNano()
+RollOffNano::RollOffNano()
 {
     SetDomeCapability(DOME_CAN_ABORT | DOME_CAN_PARK); // Need the DOME_CAN_PARK capability for the scheduler
 }
@@ -139,14 +139,14 @@ rollOffNano::rollOffNano()
 ** INDI is asking us for our default device name.
 ** Check that it matches Ekos selection menu and ParkData.xml names
 ***************************************************************************************/
-const char *rollOffNano::getDefaultName()
+const char *RollOffNano::getDefaultName()
 {
     return (const char *)"RollOff Nano";
 }
 /**************************************************************************************
 ** INDI request to init properties. Connected Define properties to Ekos
 ***************************************************************************************/
-bool rollOffNano::initProperties()
+bool RollOffNano::initProperties()
 {
     INDI::Dome::initProperties();
 
@@ -167,7 +167,7 @@ bool rollOffNano::initProperties()
 /************************************************************************************
  * Called from Dome, BaseDevice to establish contact with device
  ************************************************************************************/
-bool rollOffNano::Handshake()
+bool RollOffNano::Handshake()
 {
     bool status = false;
 
@@ -191,7 +191,7 @@ bool rollOffNano::Handshake()
 /**************************************************************************************
 ** Client is asking us to establish connection to the device
 ***************************************************************************************/
-bool rollOffNano::Connect()
+bool RollOffNano::Connect()
 {
     bool status = INDI::Dome::Connect();
     return status;
@@ -200,7 +200,7 @@ bool rollOffNano::Connect()
 /**************************************************************************************
 ** Client is asking us to terminate connection to the device
 ***************************************************************************************/
-bool rollOffNano::Disconnect()
+bool RollOffNano::Disconnect()
 {
     bool status = INDI::Dome::Disconnect();
     return status;
@@ -210,7 +210,7 @@ bool rollOffNano::Disconnect()
 ** INDI request to update the properties because there is a change in CONNECTION status
 ** This function is called whenever the device is connected or disconnected.
 *********************************************************************************************/
-bool rollOffNano::updateProperties()
+bool RollOffNano::updateProperties()
 {
     INDI::Dome::updateProperties();
     if (isConnected())
@@ -239,7 +239,7 @@ bool rollOffNano::updateProperties()
 /********************************************************************************************
 ** Establish conditions on a connect.
 *********************************************************************************************/
-bool rollOffNano::setupConditions()
+bool RollOffNano::setupConditions()
 {
     updateRoofStatus();
     Dome::DomeState curState = getDomeState();
@@ -336,8 +336,8 @@ bool rollOffNano::setupConditions()
 
 /********************************************************************************************
 ** Client has changed the state of a switch, update
-*********************************************************************************************/
-bool rollOffNano::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
+********************************************************************************************
+bool RollOffNano::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
 {
     bool switchOn = false;
     // Make sure the call is for our device
@@ -346,11 +346,9 @@ bool rollOffNano::ISNewSwitch(const char *dev, const char *name, ISState *states
     }
     return INDI::Dome::ISNewSwitch(dev, name, states, names, n);
 }
-
-void rollOffNano::updateRoofStatus()
+*/
+void RollOffNano::updateRoofStatus()
 {
-    bool auxiliaryState = false;
-    bool lockedState = false;
     bool openedState = false;
     bool closedState = false;
 
@@ -362,8 +360,6 @@ void rollOffNano::updateRoofStatus()
     if (openedState && closedState)
         DEBUG(INDI::Logger::DBG_WARNING, "Roof showing it is both opened and closed according to the controller");
 
-    RoofStatusL[ROOF_STATUS_AUXSTATE].s = IPS_IDLE;
-    RoofStatusL[ROOF_STATUS_LOCKED].s = IPS_IDLE;
     RoofStatusL[ROOF_STATUS_OPENED].s = IPS_IDLE;
     RoofStatusL[ROOF_STATUS_CLOSED].s = IPS_IDLE;
     RoofStatusL[ROOF_STATUS_MOVING].s = IPS_IDLE;
@@ -415,7 +411,7 @@ void rollOffNano::updateRoofStatus()
 /********************************************************************************************
 ** Each 1 second timer tick, if roof active
 ********************************************************************************************/
-void rollOffNano::TimerHit()
+void RollOffNano::TimerHit()
 {
     double timeleft = CalcTimeLeft(MotionStart);
     uint32_t delay = 1000 * INACTIVE_STATUS; // inactive timer setting to maintain roof status lights
@@ -511,7 +507,7 @@ void rollOffNano::TimerHit()
     SetTimer(delay);
 }
 
-float rollOffNano::CalcTimeLeft(timeval start)
+float RollOffNano::CalcTimeLeft(timeval start)
 {
     double timesince;
     double timeleft;
@@ -528,7 +524,7 @@ float rollOffNano::CalcTimeLeft(timeval start)
     return timeleft;
 }
 
-bool rollOffNano::saveConfigItems(FILE *fp)
+bool RollOffNano::saveConfigItems(FILE *fp)
 {
     bool status = INDI::Dome::saveConfigItems(fp);
     IUSaveConfigNumber(fp, &RoofTimeoutNP);
@@ -539,7 +535,7 @@ bool rollOffNano::saveConfigItems(FILE *fp)
  * Direction: DOME_CW Clockwise = Open; DOME-CCW Counter clockwise = Close
  * Operation: MOTION_START, | MOTION_STOP
  */
-IPState rollOffNano::Move(DomeDirection dir, DomeMotionCommand operation)
+IPState RollOffNano::Move(DomeDirection dir, DomeMotionCommand operation)
 {
     updateRoofStatus();
     if (operation == MOTION_START)
@@ -629,7 +625,7 @@ IPState rollOffNano::Move(DomeDirection dir, DomeMotionCommand operation)
  * Close Roof
  *
  */
-IPState rollOffNano::Park()
+IPState RollOffNano::Park()
 {
     IPState rc = INDI::Dome::Move(DOME_CCW, MOTION_START);
 
@@ -646,7 +642,7 @@ IPState rollOffNano::Park()
  * Open Roof
  *
  */
-IPState rollOffNano::UnPark()
+IPState RollOffNano::UnPark()
 {
     IPState rc = INDI::Dome::Move(DOME_CW, MOTION_START);
     if (rc == IPS_BUSY)
@@ -658,7 +654,7 @@ IPState rollOffNano::UnPark()
         return IPS_ALERT;
 }
 
-bool rollOffNano::getFullOpenedLimitSwitch(bool *switchState)
+bool RollOffNano::getFullOpenedLimitSwitch(bool *switchState)
 {
     if (isSimulation())
     {
@@ -690,7 +686,7 @@ bool rollOffNano::getFullOpenedLimitSwitch(bool *switchState)
     }
 }
 
-bool rollOffNano::getFullClosedLimitSwitch(bool *switchState)
+bool RollOffNano::getFullClosedLimitSwitch(bool *switchState)
 {
     if (isSimulation())
     {
@@ -727,7 +723,7 @@ bool rollOffNano::getFullClosedLimitSwitch(bool *switchState)
  * -------------------------------------------------------------------------------------------
  *
  */
-bool rollOffNano::roofOpen()
+bool RollOffNano::roofOpen()
 {
     if (isSimulation())
     {
@@ -736,7 +732,7 @@ bool rollOffNano::roofOpen()
     return pushRoofButton(ROOF_OPEN_RELAY, true, false);
 }
 
-bool rollOffNano::roofClose()
+bool RollOffNano::roofClose()
 {
     if (isSimulation())
     {
@@ -745,29 +741,11 @@ bool rollOffNano::roofClose()
     return pushRoofButton(ROOF_CLOSE_RELAY, true, false);
 }
 
-bool rollOffNano::setRoofLock(bool switchOn)
-{
-    if (isSimulation())
-    {
-        return false;
-    }
-    return pushRoofButton(ROOF_LOCK_RELAY, switchOn, true);
-}
-
-bool rollOffNano::setRoofAux(bool switchOn)
-{
-    if (isSimulation())
-    {
-        return false;
-    }
-    return pushRoofButton(ROOF_AUX_RELAY, switchOn, true);
-}
-
 /*
  * If unable to determine switch state due to errors, return false.
  * If no errors return true. Return in result true if switch and false if switch off.
  */
-bool rollOffNano::readRoofSwitch(const char *roofSwitchId, bool *result)
+bool RollOffNano::readRoofSwitch(const char *roofSwitchId, bool *result)
 {
     char readBuffer[MAXINOBUF];
     char writeBuffer[MAXINOLINE];
@@ -796,7 +774,7 @@ bool rollOffNano::readRoofSwitch(const char *roofSwitchId, bool *result)
 /*
  * See if the controller is running
  */
-bool rollOffNano::initialContact(void)
+bool RollOffNano::initialContact(void)
 {
     char readBuffer[MAXINOBUF];
     bool result = false;
@@ -817,7 +795,7 @@ bool rollOffNano::initialContact(void)
  * Whether roof is moving or stopped in any position along with the nature of the button requested will
  * determine the effect on the roof. This could mean stopping, or starting in a reversed direction.
  */
-bool rollOffNano::pushRoofButton(const char *button, bool switchOn, bool ignoreLock)
+bool RollOffNano::pushRoofButton(const char *button, bool switchOn, bool ignoreLock)
 {
     char readBuffer[MAXINOBUF];
     char writeBuffer[MAXINOBUF];
@@ -830,38 +808,13 @@ bool rollOffNano::pushRoofButton(const char *button, bool switchOn, bool ignoreL
         LOG_WARN("No contact with the roof controller has been established");
         return false;
     }
-    status = getRoofLockedSwitch(&switchState); // In case it has been locked since the driver connected
-    if ((status && !switchState) || ignoreLock)
-    {
-        memset(writeBuffer, 0, sizeof(writeBuffer));
-        strcpy(writeBuffer, "(SET:");
-        strcat(writeBuffer, button);
-        if (switchOn)
-            strcat(writeBuffer, ":ON)");
-        else
-            strcat(writeBuffer, ":OFF)");
-        LOGF_DEBUG("Button pushed: %s", writeBuffer);
-        if (!writeIno(writeBuffer)) // Push identified button & get response
-            return false;
-        msSleep(ROR_D_PRESS);
-        memset(readBuffer, 0, sizeof(readBuffer));
-
-        status = readIno(readBuffer);
-        evaluateResponse(readBuffer, &responseState); // To get a log of what was returned in response to the command
-        return status;                                // Did the read itself successfully connect
-    }
-    else
-    {
-        LOG_WARN("Roof external lock state prevents roof movement");
-        return false;
-    }
-}
+    
 
 /*
  * if ACK return true and set result true|false indicating if switch is on
  *
  */
-bool rollOffNano::evaluateResponse(char *buff, bool *result)
+bool RollOffNano::evaluateResponse(char *buff, bool *result)
 {
     char inoCmd[MAXINOCMD + 1];
     char inoTarget[MAXINOTARGET + 1];
@@ -881,7 +834,7 @@ bool rollOffNano::evaluateResponse(char *buff, bool *result)
     return true;
 }
 
-bool rollOffNano::readIno(char *retBuf)
+bool RollOffNano::readIno(char *retBuf)
 {
     bool stop = false;
     bool start_found = false;
@@ -920,7 +873,7 @@ bool rollOffNano::readIno(char *retBuf)
     return true;
 }
 
-bool rollOffNano::writeIno(const char *msg)
+bool RollOffNano::writeIno(const char *msg)
 {
     int retMsgLen = 0;
     int status;
@@ -943,7 +896,7 @@ bool rollOffNano::writeIno(const char *msg)
     return true;
 }
 
-void rollOffNano::msSleep(int mSec)
+void RollOffNano::msSleep(int mSec)
 {
     struct timespec req = {0, 0};
     req.tv_sec = 0;

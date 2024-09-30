@@ -1,0 +1,7 @@
+/home/stellarmate/Projects/indi-3rdparty/indi-rolloffnano/build/CMakeFiles/indi_rolloffnano.dir
+/home/stellarmate/Projects/indi-3rdparty/indi-rolloffnano/build/CMakeFiles/edit_cache.dir
+/home/stellarmate/Projects/indi-3rdparty/indi-rolloffnano/build/CMakeFiles/rebuild_cache.dir
+/home/stellarmate/Projects/indi-3rdparty/indi-rolloffnano/build/CMakeFiles/list_install_components.dir
+/home/stellarmate/Projects/indi-3rdparty/indi-rolloffnano/build/CMakeFiles/install.dir
+/home/stellarmate/Projects/indi-3rdparty/indi-rolloffnano/build/CMakeFiles/install/local.dir
+/home/stellarmate/Projects/indi-3rdparty/indi-rolloffnano/build/CMakeFiles/install/strip.dir
