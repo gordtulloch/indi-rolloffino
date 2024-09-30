@@ -8,7 +8,7 @@
  *                  ~ 15KB 2% of Due, 50% of Nano
  * tg November 2021 Break out commandReceived and requestReceived to make alernate actions more 
  *                  obvious/accessible, Remove Due specific code.
- * gt August 26 2023 Forked code to modify for my use (RA/DEC park sensors, 8 relays)
+ * gt Sept 30 2024  Forked code to create rolloff-nano)
  */
 
 #define BAUD_RATE 38400
@@ -16,19 +16,13 @@
 # define OPEN_CONTACT HIGH    // Switch definition, Change to LOW if pull-down resistors are used.
 
 // Define name to pin assignments
-#define SWITCH_1 13
-#define SWITCH_2 12
-#define SWITCH_3 11
-#define SWITCH_4 10
+#define SWITCH_1 2
+#define SWITCH_2 3
+#define SWITCH_3 4
+#define SWITCH_4 5
 
-#define RELAY_1 0
-#define RELAY_2 1
-#define RELAY_3 2
-#define RELAY_4 3
-#define RELAY_5 4
-#define RELAY_6 5
-#define RELAY_7 6
-#define RELAY_8 7
+#define ROOFRELAY 0
+
 
 // Indirection to define a functional name in terms of a switch
 // Use 0 if switch not implemented
@@ -38,18 +32,8 @@
 #define SWITCH_DECPARK SWITCH_4  // Dec is Parked
 
 // Indirection to define a functional name in terms of a relay
-// Use 0 if function not supportd
-#define FUNC_OPEN  RELAY_1
-#define FUNC_CLOSE RELAY_1    // For a single button controller might map this also to RELAY_1
-#define FUNC_STOP  RELAY_1    // For a single button controller might map this also to RELAY_1
-#define FUNC_AUX1  RELAY_2    // Relay to perform some unspecified function
-#define FUNC_AUX2  RELAY_3    // Relay to perform some unspecified function
-#define FUNC_AUX3  RELAY_4    // Relay to perform some unspecified function
-#define FUNC_AUX4  RELAY_5    // Relay to perform some unspecified function
-#define FUNC_AUX5  RELAY_6    // Relay to perform some unspecified function
-#define FUNC_AUX6  RELAY_7    // Relay to perform some unspecified function
-#define FUNC_AUX7  RELAY_8    // Relay to perform some unspecified function
-
+#define FUNC_OPEN  ROOFRELAY
+#define FUNC_CLOSE ROOFRELAY
 /*
  * For the relay that the function is mapped to indicate if that relay is to be momentarily closed 
  * or held in a closed position. 
@@ -64,14 +48,6 @@
 */
 #define FUNC_OPEN_HOLD 0
 #define FUNC_CLOSE_HOLD 0
-#define FUNC_STOP_HOLD 0
-#define FUNC_AUX1_HOLD 1 
-#define FUNC_AUX2_HOLD 1
-#define FUNC_AUX3_HOLD 1
-#define FUNC_AUX4_HOLD 1
-#define FUNC_AUX5_HOLD 1
-#define FUNC_AUX6_HOLD 1
-#define FUNC_AUX7_HOLD 1
 
 #define RELAY_PRIOR_DELAY 50
 #define RELAY_ON_DELAY 500
@@ -98,14 +74,7 @@ enum cmd_input {
 CMD_NONE,  
 CMD_OPEN,
 CMD_CLOSE,
-CMD_STOP,
-CMD_AUXSET1,
-CMD_AUXSET2,
-CMD_AUXSET3,
-CMD_AUXSET4,
-CMD_AUXSET5,
-CMD_AUXSET6,
-CMD_AUXSET7
+CMD_STOP
 } command_input;
 
 unsigned long timeMove = 0;
@@ -164,20 +133,6 @@ void sendNak(const char* errorMsg)
   }
 }
 
-/*
- * Using a SainSmart 8 channel, 12V relay module. The relay module's JD-VCC jumper is removed. A separate 12V supply 
- * powers the relay module using the GND and JD-VCC pins where the jumper was removed. The Arduino is powered from 
- * the USB connection. Also no common ground between the Arduino and the relay module so pull the ground connector. 
- * No external pullup resistor is used on the Arduino's output pin. The relay output uses the NO and common connectors. 
- * The relay requires a LOW on the signal pin to activate, This is provided when a ON command is received. Default input 
- * HIGH = inactive relay, open contact.
- * 
- * Note that Arduino GPIO pins during startup are in an indeterminate state that can reach the threshold to activate devices 
- * (like rolling back your roof!!!) so make sure that a 2.7k pullup resistor is used for any pin where it matters
- * 
- * hold 1 indicates to hold relay closed until a relay OFF is received.
- * hold 0 indicates a momentary close is wanted
- */ 
 void setRelay(int id, int hold, char* value)
 {
   if (strcmp(value, "ON") == 0)
@@ -328,7 +283,7 @@ void readUSB()
       }
 
       // Map the general input command term to the local action
-      // SET: OPEN, CLOSE, ABORT, AUX1SET etc
+      // SET: OPEN, CLOSE
       else if (strcmp(command, "SET") == 0)
       {
         // Prepare to OPEN
@@ -346,76 +301,6 @@ void readUSB()
           relay = FUNC_CLOSE;
           hold = FUNC_CLOSE_HOLD;
           timeMove = timeNow;
-        }
-        // Prepare to ABORT
-        else if (strcmp(target, "ABORT") == 0)
-        {          
-          command_input = CMD_STOP;
-
-          // Test whether or not to Abort
-          if (!isStopAllowed())
-          {           
-            error = ERROR10;
-          }
-          else
-          {             
-            relay = FUNC_STOP;
-            hold = FUNC_STOP_HOLD;
-          }
-        }
-        // Prepare for the AUX1SET function
-        else if (strcmp(target, "AUX1SET") == 0)
-        { 
-          command_input = CMD_AUX1SET;
-          relay = FUNC_LOCK;
-          hold = FUNC_LOCK_HOLD;
-        }
-
-        // Prepare for the AUX2SET function
-        else if (strcmp(target, "AUX2SET") == 0)
-        { 
-          command_input = CMD_AUX2SET;
-          relay = FUNC_AUX;
-          hold = FUNC_AUX_HOLD;
-        }
-        
-        // Prepare for the AUX3SET function
-        else if (strcmp(target, "AUX3SET") == 0)
-        { 
-          command_input = CMD_AUX3SET;
-          relay = FUNC_AUX;
-          hold = FUNC_AUX_HOLD;
-        }
-                // Prepare for the AUX4SET function
-        else if (strcmp(target, "AUX4SET") == 0)
-        { 
-          command_input = CMD_AUX4SET;
-          relay = FUNC_AUX;
-          hold = FUNC_AUX_HOLD;
-        }
-        
-        // Prepare for the AUX5SET function
-        else if (strcmp(target, "AUX5SET") == 0)
-        { 
-          command_input = CMD_AUX5SET;
-          relay = FUNC_AUX;
-          hold = FUNC_AUX_HOLD;
-        }
-                
-        // Prepare for the AUX6SET function
-        else if (strcmp(target, "AUX6SET") == 0)
-        { 
-          command_input = CMD_AUX6SET;
-          relay = FUNC_AUX;
-          hold = FUNC_AUX_HOLD;
-        }
-                
-        // Prepare for the AUX7SET function
-        else if (strcmp(target, "AUX7SET") == 0)
-        { 
-          command_input = CMD_AUX7SET;
-          relay = FUNC_AUX;
-          hold = FUNC_AUX_HOLD;
         }
       }
 
@@ -472,46 +357,6 @@ void readUSB()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Abort movement command received, test to see if abort is allowed.
-// If not return false and an error message will be returned to the host. If yes then return true. 
-// If either fully open or fully closed switches are on then deny the request by returning false.
-// If neither switch is on then if there is a specific button (relay) assigned that can stop movement then return true
-// to allow it to do so.
-//
-// This implementation assumes a one button setup and one which does not know if the roof is still moving or 
-// has hit something and already stopped. Before taking action see how long it has been since movement was initiated.
-// If it is longer than the estimate to open or close the roof, assume motion has already stopped. In this case avoid
-// emulating the single button push because that would set the roof moving again. If it seems that the roof 
-// could be moving then return true.
-// 
-// Returning true will cause the Abort request to appear in the commandReceived routine where it will activate
-// the requested relay. 
-// 
-bool isStopAllowed()
-{
-  unsigned long timeNow = millis();
-  
-  // If the roof is either fully opened or fully closed, ignore the request.
-  if (isSwitchOn(SWITCH_OPENED) || isSwitchOn(SWITCH_CLOSED)) 
-  {
-    return false;
-  }
-
-  // If time since last open or close request is longer than the time for the roof travel return false
-  if ((timeNow - timeMove) >= ROOF_OPEN_MILLI)
-  {
-    return false;
-  }
-  else
-
-  // Stop will be attempted
-  {
-    return true;
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 // Action command received
 
 // Here after pin associations resolved and request action known
@@ -562,25 +407,10 @@ void setup()
 
   // Initialize the relays
   //Pin Setups
-  pinMode(RELAY_1, OUTPUT);
-  pinMode(RELAY_2, OUTPUT);
-  pinMode(RELAY_3, OUTPUT);
-  pinMode(RELAY_4, OUTPUT); 
-  pinMode(RELAY_5, OUTPUT); 
-  pinMode(RELAY_6, OUTPUT); 
-  pinMode(RELAY_7, OUTPUT); 
-  pinMode(RELAY_8, OUTPUT); 
+  pinMode(ROOFRELAY, OUTPUT);
 
   //Turn Off the relays.
-  digitalWrite(RELAY_1, HIGH);
-  digitalWrite(RELAY_2, HIGH);
-  digitalWrite(RELAY_3, HIGH);
-  digitalWrite(RELAY_4, HIGH);  
-  digitalWrite(RELAY_5, HIGH);
-  digitalWrite(RELAY_6, HIGH);  
-  digitalWrite(RELAY_7, HIGH);
-  digitalWrite(RELAY_8, HIGH);
-
+  digitalWrite(ROOFRELAY, HIGH);
 
   // Establish USB port.
   Serial.begin(BAUD_RATE);    // Baud rate to match that in the driver

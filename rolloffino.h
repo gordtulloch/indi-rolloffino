@@ -20,11 +20,11 @@
 
 #include "indidome.h"
 
-class RollOffIno : public INDI::Dome
+class RollOffNano : public INDI::Dome
 {
   public:
-    RollOffIno();
-    virtual ~RollOffIno() override = default;
+    RollOffNano();
+    virtual ~RollOffNano() override = default;
 
     virtual bool initProperties();
     virtual void ISGetProperties(const char *dev) override;
@@ -45,17 +45,12 @@ class RollOffIno : public INDI::Dome
     virtual IPState Move(DomeDirection dir, DomeMotionCommand operation);
     virtual IPState Park();
     virtual IPState UnPark();
-    virtual bool Abort();
 
     virtual bool getFullOpenedLimitSwitch(bool*);
     virtual bool getFullClosedLimitSwitch(bool*);
 
 private:
     void updateRoofStatus();
-    bool getRoofLockedSwitch(bool*);
-    bool getRoofAuxSwitch(bool*);
-    bool setRoofLock(bool switchOn);
-    bool setRoofAux(bool switchOn);
     bool readRoofSwitch(const char* roofSwitchId, bool* result);
     bool roofOpen();
     bool roofClose();
@@ -76,7 +71,7 @@ private:
     bool roofClosing = false;
     ILight RoofStatusL[5];
     ILightVectorProperty RoofStatusLP;
-    enum { ROOF_STATUS_OPENED, ROOF_STATUS_CLOSED, ROOF_STATUS_MOVING, ROOF_STATUS_LOCKED, ROOF_STATUS_AUXSTATE };
+    enum { ROOF_STATUS_OPENED, ROOF_STATUS_CLOSED, ROOF_STATUS_MOVING };
 
     ISwitch LockS[2];
     ISwitchVectorProperty LockSP;
